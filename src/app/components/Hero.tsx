@@ -13,7 +13,7 @@ export function Hero() {
           Turn Your Leaves into Long Vacations
         </h1>
         <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-12">
-          Plan smarter by combining holidays, weekends, and earned leaves. Maximize your time off with AI-powered optimization.
+          Plan smarter by combining holidays, weekends, and earned leaves. Maximize your time off with smart optimization.
         </p>
         
         {/* Visual Elements */}
@@ -29,7 +29,7 @@ export function Hero() {
             <div className="bg-white p-4 rounded-2xl shadow-lg mb-3">
               <Sparkles className="w-8 h-8 text-secondary" />
             </div>
-            <p className="text-sm text-muted-foreground">AI Optimization</p>
+            <p className="text-sm text-muted-foreground">Optimization</p>
           </div>
           <div className="text-3xl text-muted-foreground">=</div>
           <div className="flex flex-col items-center">
