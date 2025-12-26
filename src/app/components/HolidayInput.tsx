@@ -37,8 +37,16 @@ export function HolidayInput({ selectedHolidays, onHolidaysChange }: HolidayInpu
   };
 
   const handleFileSelect = async (file: File) => {
-    if (file.type !== 'application/pdf') {
-      setParseError('Please upload a PDF file');
+    // Validate file type
+    if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
+      setParseError('Please upload a PDF file (.pdf)');
+      return;
+    }
+
+    // Validate file size (5MB limit)
+    const MAX_SIZE = 5 * 1024 * 1024; // 5MB
+    if (file.size > MAX_SIZE) {
+      setParseError(`File too large. Maximum size is 5MB. Your file is ${(file.size / 1024 / 1024).toFixed(2)}MB.`);
       return;
     }
 
@@ -50,7 +58,7 @@ export function HolidayInput({ selectedHolidays, onHolidaysChange }: HolidayInpu
       const parsedHolidays = await parseHolidayPDF(file);
       
       if (parsedHolidays.length === 0) {
-        setParseError('No dates found in PDF. Please try manual selection or ensure the PDF contains readable dates.');
+        setParseError('No dates found in PDF. Please try manual selection or ensure the PDF contains readable dates in formats like "01 Jan 2026" or "01/01/2026".');
         setIsParsing(false);
         return;
       }
@@ -65,12 +73,31 @@ export function HolidayInput({ selectedHolidays, onHolidaysChange }: HolidayInpu
       if (newDates.length > 0) {
         onHolidaysChange([...selectedHolidays, ...newDates]);
         setParseSuccess(newDates.length);
+        
+        // Show sample dates in console for debugging
+        if (import.meta.env.DEV) {
+          console.log('[HolidayInput] Parsed holidays:', parsedHolidays.slice(0, 5).map(h => ({
+            date: format(h.date, 'yyyy-MM-dd'),
+            name: h.name
+          })));
+        }
       } else {
         setParseError('All dates from PDF are already selected');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('PDF parsing error:', error);
-      setParseError(error instanceof Error ? error.message : 'Failed to parse PDF. Please try manual selection.');
+      
+      // Handle structured error objects
+      if (error && typeof error === 'object' && 'type' in error && 'message' in error) {
+        let errorMessage = error.message;
+        if (error.details) {
+          errorMessage += ` (${error.details})`;
+        }
+        setParseError(errorMessage);
+      } else {
+        // Fallback for non-structured errors
+        setParseError(error instanceof Error ? error.message : 'Failed to parse PDF. Please try manual selection.');
+      }
     } finally {
       setIsParsing(false);
     }
@@ -240,6 +267,9 @@ export function HolidayInput({ selectedHolidays, onHolidaysChange }: HolidayInpu
                 <p className="text-sm text-muted-foreground">
                   Extracting holiday dates from your calendar
                 </p>
+                <div className="mt-2 text-xs text-muted-foreground">
+                  This may take a few seconds...
+                </div>
               </>
             ) : (
               <>
@@ -249,7 +279,10 @@ export function HolidayInput({ selectedHolidays, onHolidaysChange }: HolidayInpu
                 </p>
                 <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
                   <FileText className="w-4 h-4" />
-                  <span>Supported format: PDF</span>
+                  <span>Supported format: PDF (max 5MB)</span>
+                </div>
+                <div className="mt-2 text-xs text-muted-foreground">
+                  Supports dates in formats: "01 Jan 2026", "Jan 1, 2026", "01/01/2026"
                 </div>
               </>
             )}
@@ -279,7 +312,10 @@ export function HolidayInput({ selectedHolidays, onHolidaysChange }: HolidayInpu
               <div className="flex-1">
                 <p className="text-sm text-green-800 font-medium">Successfully parsed PDF</p>
                 <p className="text-xs text-green-700 mt-1">
-                  Added {parseSuccess} holiday{parseSuccess > 1 ? 's' : ''} from the PDF
+                  Found {parseSuccess} holiday{parseSuccess > 1 ? 's' : ''} from the PDF
+                </p>
+                <p className="text-xs text-green-600 mt-1">
+                  You can switch to "Manual Selection" to review or edit the dates
                 </p>
               </div>
               <button

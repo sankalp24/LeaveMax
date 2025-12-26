@@ -1,4 +1,4 @@
-import { Info } from 'lucide-react';
+import { Info, Plus, Minus } from 'lucide-react';
 import { useState } from 'react';
 
 interface PreferencesCardProps {
@@ -6,6 +6,8 @@ interface PreferencesCardProps {
   onSandwichRuleChange: (value: boolean) => void;
   preferLonger: boolean;
   onPreferLongerChange: (value: boolean) => void;
+  maxContinuousLeaves: number;
+  onMaxContinuousLeavesChange: (value: number) => void;
 }
 
 export function PreferencesCard({
@@ -13,6 +15,8 @@ export function PreferencesCard({
   onSandwichRuleChange,
   preferLonger,
   onPreferLongerChange,
+  maxContinuousLeaves,
+  onMaxContinuousLeavesChange,
 }: PreferencesCardProps) {
   const [showTooltip, setShowTooltip] = useState<string | null>(null);
 
@@ -98,6 +102,50 @@ export function PreferencesCard({
               }`}
             />
           </button>
+        </div>
+
+        {/* Max Continuous Leaves */}
+        <div className="p-4 bg-muted/30 rounded-xl">
+          <div className="flex-1">
+            <div className="flex items-center gap-2 mb-1">
+              <label>Max Continuous Leaves</label>
+              <div className="relative">
+                <button
+                  onMouseEnter={() => setShowTooltip('maxLeaves')}
+                  onMouseLeave={() => setShowTooltip(null)}
+                  className="text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <Info className="w-4 h-4" />
+                </button>
+                {showTooltip === 'maxLeaves' && (
+                  <div className="absolute left-0 top-6 w-64 bg-popover text-popover-foreground p-3 rounded-lg shadow-lg border border-border z-10 text-sm">
+                    Maximum number of consecutive working days you can take as leave. This helps optimize recommendations based on your company policy.
+                  </div>
+                )}
+              </div>
+            </div>
+            <p className="text-xs text-muted-foreground mb-3">
+              Maximum consecutive working-day leaves allowed
+            </p>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => onMaxContinuousLeavesChange(Math.max(1, maxContinuousLeaves - 1))}
+                className="w-10 h-10 rounded-lg bg-white border border-border hover:bg-muted transition-all hover:scale-105 flex items-center justify-center"
+              >
+                <Minus className="w-4 h-4" />
+              </button>
+              <div className="flex-1 text-center p-3 rounded-lg bg-white border-2 border-primary">
+                <span className="text-2xl">{maxContinuousLeaves}</span>
+                <span className="text-sm text-muted-foreground ml-1">days</span>
+              </div>
+              <button
+                onClick={() => onMaxContinuousLeavesChange(maxContinuousLeaves + 1)}
+                className="w-10 h-10 rounded-lg bg-white border border-border hover:bg-muted transition-all hover:scale-105 flex items-center justify-center"
+              >
+                <Plus className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>

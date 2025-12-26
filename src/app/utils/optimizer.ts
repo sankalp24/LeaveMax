@@ -55,11 +55,11 @@ function getDateRange(start: Date, end: Date) {
 
 /* -------------------- rules -------------------- */
 
-/** max 3 consecutive WORKING-DAY leaves */
+/** max consecutive WORKING-DAY leaves */
 function exceedsMaxConsecutiveLeaves(
   leaveDates: Date[],
   holidays: Date[],
-  max = 3
+  max: number
 ) {
   const sorted = leaveDates
     .map(normalize)
@@ -142,11 +142,12 @@ function extendToFullVacation(
 function buildOpportunity(
   leaveDates: Date[],
   holidays: Date[],
-  anchorHoliday: Date
+  anchorHoliday: Date,
+  maxContinuousLeaves: number
 ) {
   if (
     leaveDates.length === 0 ||
-    exceedsMaxConsecutiveLeaves(leaveDates, holidays) ||
+    exceedsMaxConsecutiveLeaves(leaveDates, holidays, maxContinuousLeaves) ||
     !hasHolidayAnchor(leaveDates, holidays)
   ) {
     return null;
@@ -170,13 +171,23 @@ function buildOpportunity(
   };
 }
 
+type Opportunity = {
+  leaveDates: Date[];
+  startDate: Date;
+  endDate: Date;
+  totalDays: number;
+  bonusDays: number;
+  efficiency: number;
+};
+
 function findOpportunitiesAroundHoliday(
   holiday: Date,
-  holidays: Date[]
-) {
+  holidays: Date[],
+  maxContinuousLeaves: number
+): Opportunity[] {
   if (isWeekend(holiday)) return [];
 
-  const results = [];
+  const results: Opportunity[] = [];
 
   const before: Date[] = [];
   let d = addDays(holiday, -1);
@@ -192,17 +203,27 @@ function findOpportunitiesAroundHoliday(
     d = addDays(d, 1);
   }
 
-  // BEFORE only
-  const beforeOpp = buildOpportunity(before.slice(-3), holidays, holiday);
+  // BEFORE only (up to maxContinuousLeaves)
+  const beforeOpp = buildOpportunity(
+    before.slice(-maxContinuousLeaves), 
+    holidays, 
+    holiday,
+    maxContinuousLeaves
+  );
   if (beforeOpp) results.push(beforeOpp);
 
-  // AFTER only
-  const afterOpp = buildOpportunity(after.slice(0, 3), holidays, holiday);
+  // AFTER only (up to maxContinuousLeaves)
+  const afterOpp = buildOpportunity(
+    after.slice(0, maxContinuousLeaves), 
+    holidays, 
+    holiday,
+    maxContinuousLeaves
+  );
   if (afterOpp) results.push(afterOpp);
 
   // 🔥 COMBINED (this fixes Christmas)
-  const combined = [...before.slice(-3), ...after.slice(0, 3)];
-  const combinedOpp = buildOpportunity(combined, holidays, holiday);
+  const combined = [...before.slice(-maxContinuousLeaves), ...after.slice(0, maxContinuousLeaves)];
+  const combinedOpp = buildOpportunity(combined, holidays, holiday, maxContinuousLeaves);
   if (combinedOpp) results.push(combinedOpp);
 
   return results;
@@ -215,7 +236,8 @@ export function optimizeLeaves(
   holidays: Date[],
   totalLeaves: number,
   _sandwichRule: boolean,
-  preferLonger: boolean
+  preferLonger: boolean,
+  maxContinuousLeaves: number = 3
 ): OptimizationResult {
   if (!holidays.length || totalLeaves <= 0) {
     return emptyResult(totalLeaves);
@@ -226,7 +248,7 @@ export function optimizeLeaves(
     .sort((a, b) => a.getTime() - b.getTime());
 
   const opportunities = normalizedHolidays.flatMap(h =>
-    findOpportunitiesAroundHoliday(h, normalizedHolidays)
+    findOpportunitiesAroundHoliday(h, normalizedHolidays, maxContinuousLeaves)
   );
 
   opportunities.sort((a, b) =>
@@ -236,7 +258,7 @@ export function optimizeLeaves(
   );
 
   const used = new Set<string>();
-  const selected = [];
+  const selected: Opportunity[] = [];
   let usedLeaves = 0;
 
   for (const opp of opportunities) {

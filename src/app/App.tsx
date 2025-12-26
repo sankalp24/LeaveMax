@@ -32,6 +32,7 @@ function App() {
   const [sickLeaves, setSickLeaves] = useState(5);
   const [sandwichRule, setSandwichRule] = useState(true);
   const [preferLonger, setPreferLonger] = useState(false);
+  const [maxContinuousLeaves, setMaxContinuousLeaves] = useState(3);
   const [optimizationResult, setOptimizationResult] = useState<OptimizationResult | null>(null);
   const [isOptimizing, setIsOptimizing] = useState(false);
   const [resultMonth, setResultMonth] = useState(new Date());
@@ -44,7 +45,7 @@ function App() {
     setTimeout(() => {
       // Only use earned + casual leaves for optimization (sick leaves are separate)
       const totalLeaves = earnedLeaves + casualLeaves;
-      const result = optimizeLeaves(selectedHolidays, totalLeaves, sandwichRule, preferLonger);
+      const result = optimizeLeaves(selectedHolidays, totalLeaves, sandwichRule, preferLonger, maxContinuousLeaves);
       setOptimizationResult(result);
       setSelectedRecommendationId(null); // Reset selection on new optimization
       setIsOptimizing(false);
@@ -92,6 +93,8 @@ function App() {
                 onSandwichRuleChange={setSandwichRule}
                 preferLonger={preferLonger}
                 onPreferLongerChange={setPreferLonger}
+                maxContinuousLeaves={maxContinuousLeaves}
+                onMaxContinuousLeavesChange={setMaxContinuousLeaves}
               />
             </div>
           </div>

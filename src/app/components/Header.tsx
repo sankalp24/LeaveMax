@@ -1,5 +1,4 @@
-import { Calendar, Settings, User, ChevronDown, LogOut } from 'lucide-react';
-import { useState } from 'react';
+import { Calendar } from 'lucide-react';
 
 interface HeaderProps {
   activeTab: string;
@@ -7,8 +6,6 @@ interface HeaderProps {
 }
 
 export function Header({ activeTab, onTabChange }: HeaderProps) {
-  const [showDropdown, setShowDropdown] = useState(false);
-
   return (
     <header className="bg-white/80 backdrop-blur-md border-b border-border sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-6 py-5 flex items-center justify-between">
@@ -40,35 +37,6 @@ export function Header({ activeTab, onTabChange }: HeaderProps) {
           ))}
         </nav>
 
-        {/* User Menu */}
-        <div className="relative">
-          <button
-            onClick={() => setShowDropdown(!showDropdown)}
-            className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-muted transition-all"
-          >
-            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
-              <User className="w-4 h-4 text-white" />
-            </div>
-            <ChevronDown className="w-4 h-4 text-muted-foreground" />
-          </button>
-
-          {showDropdown && (
-            <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-border overflow-hidden">
-              <div className="p-3 border-b border-border">
-                <p className="text-sm">John Doe</p>
-                <p className="text-xs text-muted-foreground">john@company.com</p>
-              </div>
-              <button className="w-full px-3 py-2 text-sm text-left hover:bg-muted flex items-center gap-2 transition-colors">
-                <Settings className="w-4 h-4" />
-                Settings
-              </button>
-              <button className="w-full px-3 py-2 text-sm text-left hover:bg-muted flex items-center gap-2 text-destructive transition-colors">
-                <LogOut className="w-4 h-4" />
-                Logout
-              </button>
-            </div>
-          )}
-        </div>
       </div>
     </header>
   );
